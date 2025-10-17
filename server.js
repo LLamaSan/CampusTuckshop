@@ -1485,10 +1485,8 @@ async function sendPasswordResetEmail(user, resetToken) {
 
         // Create reset link (adjust URL for production)
         // Get the live frontend URL from the environment variables
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-// Use that variable to build the link
-const resetLink = `${FRONTEND_URL}/reset-password.html?token=${resetToken}`;
+const appUrl = process.env.KOYEB_PUBLIC_URL || 'http://localhost:3001';
+const resetLink = `${appUrl}/reset-password.html?token=${resetToken}`;
 
         const textContent = `
 Dear ${user.name},
