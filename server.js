@@ -1483,9 +1483,8 @@ async function sendPasswordResetEmail(user, resetToken) {
             throw new Error('Email configuration missing');
         }
 
-        // Create reset link (adjust URL for production)
-        // Get the live frontend URL from the environment variables
-const appUrl = process.env.KOYEB_PUBLIC_URL || 'http://localhost:3001';
+// Railway provides this variable. We add "https://" to it.
+const appUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` || 'http://localhost:3001';
 const resetLink = `${appUrl}/reset-password.html?token=${resetToken}`;
 
         const textContent = `
