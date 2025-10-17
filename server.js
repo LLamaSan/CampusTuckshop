@@ -19,7 +19,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 app.use(cors({ origin: FRONTEND_URL }));
 
-// MongoDB connection
+console.log('--- Database Connection Check ---');
+console.log('MONGODB_URI from environment:', process.env.MONGODB_URI); // Log the variable
+console.log('Attempting to connect...');
+
+// Your existing connection line:
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tuckshop', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
