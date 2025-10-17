@@ -18,7 +18,6 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "@sendgrid/mail": "^8.1.5",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
