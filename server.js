@@ -9,21 +9,31 @@ const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(cors());
+
+
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+app.use(cors({ origin: FRONTEND_URL }));
+
+app.get('/', (req, res) => {
+  res.send('Hello from Railway!');
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+//app.use(express.static(path.join(__dirname, 'public')));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => { // <-- Add '0.0.0.0' here
     console.log(`Server running on host 0.0.0.0 and port ${PORT}`);
     // Keep your other console.log if you want
 });
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.get('/', (req, res) => {
-  res.send('Hello from Railway!');
-});
-//app.use(express.static(path.join(__dirname, 'public')));
-
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
-app.use(cors({ origin: FRONTEND_URL }));
 
 console.log('--- Database Connection Check ---');
 console.log('MONGODB_URI from environment:', process.env.MONGODB_URI); // Log the variable
