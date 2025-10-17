@@ -17,7 +17,10 @@ app.listen(PORT, '0.0.0.0', () => { // <-- Add '0.0.0.0' here
 // Middleware
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', (req, res) => {
+  res.send('Hello from Railway!');
+});
+//app.use(express.static(path.join(__dirname, 'public')));
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 app.use(cors({ origin: FRONTEND_URL }));
