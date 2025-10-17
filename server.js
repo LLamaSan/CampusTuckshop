@@ -10,7 +10,10 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+app.listen(PORT, '0.0.0.0', () => { // <-- Add '0.0.0.0' here
+    console.log(`Server running on host 0.0.0.0 and port ${PORT}`);
+    // Keep your other console.log if you want
+});
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -1621,10 +1624,7 @@ mongoose.connection.on('disconnected', () => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Access the website at: http://localhost:${PORT}`);
-});
+
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
