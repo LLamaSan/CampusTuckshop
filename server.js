@@ -9,40 +9,41 @@ const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
-
 // Middleware
 app.use(express.json());
-app.use(cors());
 
-
-
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+// Configure CORS correctly ONCE
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000"; // Or maybe use RAILWAY_PUBLIC_DOMAIN here too? Check your needs.
 app.use(cors({ origin: FRONTEND_URL }));
 
-app.get('/', (req, res) => {
-  res.send('Hello from Railway!');
-});
+// **IMPORTANT: Serve static files from 'public' directory**
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check route (Good to keep)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-//app.use(express.static(path.join(__dirname, 'public')));
+// Remove the temporary app.get('/') for "Hello from Railway!"
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => { // <-- Add '0.0.0.0' here
-    console.log(`Server running on host 0.0.0.0 and port ${PORT}`);
-    // Keep your other console.log if you want
-});
-
-console.log('--- Database Connection Check ---');
-console.log('MONGODB_URI from environment:', process.env.MONGODB_URI); // Log the variable
+// Database connection (Remove debug logs if you want)
 console.log('Attempting to connect...');
-
-// Your existing connection line:
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tuckshop', {
+mongoose.connect(process.env.MONGODB_URI, { // Removed the || 'localhost...' fallback - safer in production
     useNewUrlParser: true,
     useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected successfully'))
+.catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1); // Exit if DB connection fails on startup
+});
+
+// ... your API routes (/api/login, /api/reset-password etc.) should come AFTER middleware ...
+
+// Start server
+const PORT = process.env.PORT || 3000; // Use 3000 or 3001 consistently if needed locally
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on host 0.0.0.0 and port ${PORT}`);
 });
 
 // User Schema
