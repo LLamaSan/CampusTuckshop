@@ -1,3 +1,20 @@
+// Add these error handlers near the top
+process.on('uncaughtException', (err, origin) => {
+  console.error(`\n\nFATAL: Uncaught Exception:`);
+  console.error(err);
+  console.error(`Exception origin: ${origin}`);
+  process.exit(1); // Force exit after logging
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error(`\n\nFATAL: Unhandled Rejection at:`);
+  console.error(promise);
+  console.error(`Reason: ${reason}`);
+  process.exit(1); // Force exit after logging
+});
+
+// ... rest of your code (express, mongoose, etc.) ...
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
