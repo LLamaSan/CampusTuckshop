@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Tuckshop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            position: relative;
+            background: rgba(30, 30, 60, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hamburger-menu {
+    font-size: 24px;
+    cursor: pointer;
+    color: #4facfe;
+    transition: color 0.3s ease;
+}
+
+.hamburger-menu:hover {
+    color: #00f2fe;
+}
+
+.auth-buttons {
+    position: absolute;
+    top: 70px;
+    left: 20px;
+    flex-direction: column;
+    background: rgba(30, 30, 60, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 10px;
+    z-index: 9999;
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    min-width: 150px;
+}
+
+.auth-buttons.hidden {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .auth-buttons {
+        position: fixed;
+        top: 80px;
+        left: 20px;
+    }
+}
+
+        .logo {
+    font-size: 2.5em;
+    font-weight: bold;
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+        .auth-buttons {
+    gap: 15px;
+}
+
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: #1a1a2e;
+        }
+
+        .btn-secondary {
+            background: rgba(79, 172, 254, 0.1);
+            color: #4facfe;
+            border: 2px solid #4facfe;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .user-info {
+            display: none;
+            align-items: center;
+            gap: 15px;
+            color: #e0e0e0;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .category {
+            background: rgba(30, 30, 60, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .category:hover {
+            transform: translateY(-5px);
+        }
+
+        .category h2 {
+            color: #4facfe;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .product {
+            background: rgba(40, 40, 80, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .product:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.2);
+        }
+
+        .product-img {
+            width: 250px;
+            height: 250px;
+            border-radius: 15px;
+            margin: 0 auto 15px;
+            object-fit: cover;
+            border: 2px solid rgba(79, 172, 254, 0.3);
+        }
+
+        .product-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            font-size: 1.1em;
+        }
+
+        .product-price {
+            color: #4facfe;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .product-stock {
+            color: #a0a0a0;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .stock-low {
+            color: #ff6b6b;
+        }
+
+        .stock-out {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-to-cart:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .add-to-cart:disabled {
+            background: rgba(100, 100, 100, 0.5);
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .cart {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(30, 30, 60, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    min-width: 320px;
+    max-height: 450px;
+    overflow-y: auto;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: none;
+}
+
+.cart.show {
+    display: block;
+}
+
+.cart-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+    color: #1a1a2e;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+    z-index: 1001;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cart-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+}
+
+.cart-toggle-btn .cart-icon {
+    font-size: 18px;
+}
+
+.cart-toggle-btn .cart-badge {
+    background: #1a1a2e;
+    color: #4facfe;
+    border-radius: 50%;
+    padding: 2px 8px;
+    font-size: 12px;
+    min-width: 20px;
+    text-align: center;
+}
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(79, 172, 254, 0.3);
+        }
+
+        .cart-header h3 {
+            color: #4facfe;
+        }
+
+        .cart-count {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: #1a1a2e;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .cart-item-price {
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Add these CSS rules to enhance the address flow */
+
+/* Address form styling */
+#addressSection {
+    animation: fadeIn 0.3s ease;
+}
+
+#summarySection {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form validation styling */
+.form-group input:invalid:not(:placeholder-shown) {
+    border-color: #ff4757;
+    box-shadow: 0 0 5px rgba(255, 71, 87, 0.3);
+}
+
+.form-group input:valid:not(:placeholder-shown) {
+    border-color: #28a745;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+}
+
+/* Address display styling */
+#deliveryAddress {
+    background: rgba(30, 30, 60, 0.95);
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+#deliveryAddress h4 {
+    color: #4facfe;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+/* Step indicator styling */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.step.active {
+    color: #4facfe;
+    font-weight: bold;
+}
+
+.step-number {
+    background: rgba(79, 172, 254, 0.2);
+    color: #4facfe;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.step.active .step-number {
+    background: #4facfe;
+    color: #1a1a2e;
+}
+
+.step-separator {
+    width: 50px;
+    height: 2px;
+    background: rgba(79, 172, 254, 0.2);
+    margin: 0 15px;
+}
+
+.step.active ~ .step-separator {
+    background: #4facfe;
+}
+
+/* Button group styling */
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.button-group .btn {
+    flex: 1;
+}
+
+/* Phone number input styling */
+#phoneNumber {
+    padding-left: 40px;
+}
+
+#phoneNumber::placeholder {
+    content: "+91 ";
+}
+
+.phone-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0a0a0;
+    pointer-events: none;
+}
+
+.modal-step-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh; /* Limit height */
+    overflow: hidden;
+}
+
+.address-form-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    max-height: 60vh;
+}
+
+.fixed-bottom-buttons {
+     position: sticky;
+    bottom: 0;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 15px 0 0 0;
+    margin-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 5% auto;
+        width: 95%;
+        max-height: 95vh;
+        padding: 15px;
+    }
+
+    .address-form-scrollable {
+        max-height: 50vh;
+    }
+    
+    .form-group {
+        margin-bottom: 15px; /* Reduce spacing on mobile */
+    }
+    
+    .form-group input {
+        padding: 10px; /* Reduce input padding */
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .button-group .btn {
+        width: 100%;
+    }
+}
+
+        .quantity-btn {
+            background: rgba(79, 172, 254, 0.2);
+            color: #4facfe;
+            border: 1px solid #4facfe;
+            border-radius: 5px;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .quantity-btn:hover {
+            background: rgba(79, 172, 254, 0.3);
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .cart-total {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #4facfe;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(79, 172, 254, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh; /* Add max height */
+            overflow-y: auto; 
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close {
+            color: #a0a0a0;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #4facfe;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 16px;
+            background: rgba(40, 40, 80, 0.8);
+            color: #e0e0e0;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 10px rgba(79, 172, 254, 0.2);
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            display: none;
+            border: 1px solid;
+        }
+
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .alert-error {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(79, 172, 254, 0.3);
+            border-radius: 50%;
+            border-top-color: #4facfe;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .order-dialog {
+            background: rgba(30, 30, 60, 0.95);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .order-dialog h4 {
+            color: #4facfe;
+            margin-bottom: 15px;
+        }
+
+        .order-summary {
+            background: rgba(40, 40, 80, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .categories {
+                grid-template-columns: 1fr;
+            }
+            
+            .products {
+                grid-template-columns: 1fr;
+            }
+            
+            .product-img {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .cart {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 20px;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="hamburger-menu" onclick="toggleMenu()">☰</div>
+            <div class="logo">Campus Tuckshop</div>
+           
+<div class="auth-buttons hidden" id="authButtons">
+    <button class="btn btn-secondary" onclick="openModal('loginModal')">Sign In</button>
+    <button class="btn btn-primary" onclick="openModal('signupModal')">Sign Up</button>
+</div>
+
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div id="loginRequired" class="alert alert-warning">
+            Please sign in to add items to cart and make purchases.
+        </div>
+
+        <div class="categories" id="categoriesContainer">
+            
+        </div>
+    </div>
+
+    <button class="cart-toggle-btn" id="cartToggleBtn" onclick="toggleCart()">
+    <span class="cart-icon">🛒</span>
+    <span class="cart-badge" id="cartBadge">0</span>
+</button>
+
+<div class="cart" id="cart">
+    <div class="cart-header">
+        <h3>Cart</h3>
+        <span class="cart-count" id="cartCount">0</span>
+        <button class="close" onclick="toggleCart()" style="background: none; border: none; color: #a0a0a0; font-size: 20px; cursor: pointer;">&times;</button>
+    </div>
+    <div id="cartItems"></div>
+    <div class="cart-total">
+        Total: ₹<span id="cartTotal">0</span>
+    </div>
+    <button class="btn btn-primary" style="width: 100%; margin-top: 15px;" onclick="checkout()">
+        Place Order
+    </button>
+</div>
+
+<!-- Replace the existing orderModal div with this updated version -->
+<div id="orderModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('orderModal')">&times;</span>
+        
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span>Address</span>
+            </div>
+            <div class="step-separator"></div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span>Review</span>
+            </div>
+            <div class="step-separator"></div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <span>Confirm</span>
+            </div>
+        </div>
+        
+        <div id="orderAlert" class="alert"></div>
+        
+<div id="addressSection" style="display: block;">
+    <h2 style="color: #4facfe; margin-bottom: 20px;">Delivery Information</h2>
+
+    <div class="modal-step-section">
+        <div class="address-form-scrollable">
+            <form id="addressForm">
+                        <div class="form-group">
+            <label for="fullName">Full Name *</label>
+            <input type="text" id="fullName" required>
+        </div>
+        <div class="form-group" style="position: relative;">
+            <label for="phoneNumber">Phone Number *</label>
+            <span class="phone-prefix">+91</span>
+            <input type="tel" id="phoneNumber" pattern="[0-9]{10}" maxlength="10" required>
+        </div>
+        <div class="form-group">
+            <label for="addressLine1">Address Line 1 *</label>
+            <input type="text" id="addressLine1" required>
+        </div>
+        <div class="form-group">
+            <label for="addressLine2">Address Line 2</label>
+            <input type="text" id="addressLine2">
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="city">City *</label>
+                <input type="text" id="city" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="pincode">PIN Code *</label>
+                <input type="text" id="pincode" pattern="[0-9]{6}" maxlength="6" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="state">State *</label>
+            <input type="text" id="state" required>
+        </div>
+        </form>
+        </div>
+
+        <div class="fixed-bottom-buttons">
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="closeModal('orderModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="proceedToOrderSummary()">Continue to Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        
+        <!-- Order Summary Section -->
+        <div id="summarySection" style="display: none;">
+            <h2 style="color: #4facfe; margin-bottom: 20px;">Review Your Order</h2>
+            
+            <div id="deliveryAddress" class="order-dialog"></div>
+            <div id="orderSummary" class="order-summary"></div>
+            
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="backToAddress()">Back to Address</button>
+                <button class="btn btn-primary" onclick="confirmOrder()">Confirm Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('loginModal')">&times;</span>
+        <h2 style="color: #4facfe; margin-bottom: 20px;">Sign In</h2>
+        <div id="loginAlert" class="alert"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <!-- Add forgot password link -->
+            <div style="text-align: right; margin-bottom: 15px;">
+                <a href="#" onclick="openForgotPassword(); return false;" style="color: #4facfe; text-decoration: none; font-size: 0.9em;">Forgot Password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        </form>
+    </div>
+</div>
+
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('signupModal')">&times;</span>
+            <h2 style="color: #4facfe; margin-bottom: 20px;">Sign Up</h2>
+            <div id="signupAlert" class="alert"></div>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name:</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email:</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password:</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot password modal -->
+<div id="forgotPasswordModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
+        <h2 style="color: #4facfe; margin-bottom: 20px;">Forgot Password?</h2>
+        <p style="color: #a0a0a0; margin-bottom: 20px;">Enter your email address and we'll send you a link to reset your password.</p>
+        <div id="forgotPasswordAlert" class="alert"></div>
+        <form id="forgotPasswordForm">
+            <div class="form-group">
+                <label for="forgotPasswordEmail">Email:</label>
+                <input type="email" id="forgotPasswordEmail" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Send Reset Link</button>
+            <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="backToLogin()">Back to Login</button>
+        </form>
+    </div>
+</div>
+
+
+    <script>
+        // Global variables
+let currentUser = null;
+let cart = [];
+let isLoggedIn = false;
+let productMap = {};
+let pendingOrder = null;
+
+// Initialize the application
+window.onload = function() {
+    loadProducts();
+    checkAuthStatus();
+    setupModalHandlers();
+};
+
+// Check if user is authenticated
+async function checkAuthStatus() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        try {
+            const response = await fetch('/api/verify-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentUser = data.user;
+                isLoggedIn = true;
+                updateAuthState();
+            } else {
+                localStorage.removeItem('token');
+            }
+        } catch (error) {
+            console.error('Error verifying token:', error);
+            localStorage.removeItem('token');
+        }
+    }
+}
+function toggleMenu() {
+    const authButtons = document.getElementById('authButtons');
+    authButtons.classList.toggle('hidden');
+    
+    // Close the menu when clicking outside
+    if (!authButtons.classList.contains('hidden')) {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!authButtons.contains(e.target) && !e.target.classList.contains('hamburger-menu')) {
+                authButtons.classList.add('hidden');
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }
+}
+// Load products from server
+async function loadProducts() {
+    try {
+        const response = await fetch('/api/products');
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.products)) {
+            productMap = {};
+            
+            const categories = {
+                Snacks: [],
+                Stationery: [],
+                Drinks: []
+            };
+
+            data.products.forEach(product => {
+                productMap[product.name] = product;
+                
+                // Use the category from the product or auto-categorize
+                let category = product.category || 'Snacks';
+                if (!categories[category]) {
+                    category = 'Snacks'; // Fallback to Snacks if category not found
+                }
+                
+                categories[category].push(product);
+            });
+
+            renderCategories(categories);
+        } else {
+            console.error('Failed to load products:', data.message);
+            showAlert('loginAlert', 'Failed to load products. Please refresh the page.', 'alert-error');
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        showAlert('loginAlert', 'Error loading products. Please refresh the page.', 'alert-error');
+    }
+}
+
+// Render product categories
+function renderCategories(categories) {
+    const container = document.getElementById('categoriesContainer');
+    container.innerHTML = '';
+
+    Object.entries(categories).forEach(([categoryName, products]) => {
+        if (products.length === 0) return;
+
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category';
+        
+        const heading = document.createElement('h2');
+        heading.textContent = categoryName;
+        
+        const productsDiv = document.createElement('div');
+        productsDiv.className = 'products';
+        
+        products.forEach(product => {
+            const productDiv = document.createElement('div');
+            productDiv.className = 'product';
+            
+            const stockStatus = getStockStatus(product.quantity);
+            const isOutOfStock = product.quantity <= 0;
+            
+            productDiv.innerHTML = `
+                <img src="${product.imageUrl}" alt="${product.name}" class="product-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDI1MCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyNTAiIGhlaWdodD0iMjUwIiBmaWxsPSIjNDA0MDgwIi8+Cjx0ZXh0IHg9IjEyNSIgeT0iMTI1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZTBlMGUwIiBmb250LXNpemU9IjE2cHgiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4='" />
+                <div class="product-name">${product.name}</div>
+                <div class="product-price">₹${product.price}</div>
+                <div class="product-stock ${stockStatus.class}">${stockStatus.text}</div>
+                <button class="add-to-cart" ${isOutOfStock ? 'disabled' : ''} onclick="addToCart('${product.name.replace(/'/g, "\\'")}', ${product.price})">
+                    ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+            `;
+            
+            productsDiv.appendChild(productDiv);
+        });
+        
+        categoryDiv.appendChild(heading);
+        categoryDiv.appendChild(productsDiv);
+        container.appendChild(categoryDiv);
+    });
+}
+
+window.addEventListener('resize', () => {
+    // Close menu on resize
+    const authButtons = document.getElementById('authButtons');
+    authButtons.classList.add('hidden');
+});
+
+
+// Get stock status display
+function getStockStatus(quantity) {
+    if (quantity <= 0) {
+        return { text: 'Out of Stock', class: 'stock-out' };
+    } else if (quantity <= 5) {
+        return { text: `Only ${quantity} left`, class: 'stock-low' };
+    } else {
+        return { text: `${quantity} in stock`, class: '' };
+    }
+}
+
+
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    // Clear form alerts when closing
+    const alertElements = document.querySelectorAll(`#${modalId} .alert`);
+    alertElements.forEach(alert => {
+        alert.style.display = 'none';
+    });
+}
+
+function setupModalHandlers() {
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    };
+}
+
+
+function updateAuthState() {
+    const authButtons = document.getElementById('authButtons');
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    const loginRequired = document.getElementById('loginRequired');
+    const hamburgerMenu = document.querySelector('.hamburger-menu');
+
+    if (isLoggedIn) {
+        authButtons.classList.add('hidden');
+        userInfo.style.display = 'flex';
+        userName.textContent = `Welcome, ${currentUser.name}`;
+        loginRequired.style.display = 'none';
+        hamburgerMenu.style.display = 'none'; // Hide hamburger when logged in
+    } else {
+        authButtons.classList.add('hidden'); // Always start hidden
+        userInfo.style.display = 'none';
+        loginRequired.style.display = 'block';
+        hamburgerMenu.style.display = 'block'; // Show hamburger when not logged in
+    }
+}
+
+// Show alert messages
+function showAlert(elementId, message, type) {
+    const alert = document.getElementById(elementId);
+    if (alert) {
+        alert.textContent = message;
+        alert.className = `alert ${type}`;
+        alert.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            alert.style.display = 'none';
+        }, 5000);
+    }
+}
+
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+        showAlert('loginAlert', 'Please fill in all fields', 'alert-error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            localStorage.setItem('token', data.token);
+            currentUser = data.user;
+            isLoggedIn = true;
+            updateAuthState();
+            closeModal('loginModal');
+            
+            // Clear form
+            document.getElementById('loginForm').reset();
+            
+            // Show success message
+            showAlert('loginAlert', 'Login successful!', 'alert-success');
+        } else {
+            showAlert('loginAlert', data.message || 'Login failed', 'alert-error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showAlert('loginAlert', 'Network error. Please try again.', 'alert-error');
+    }
+});
+
+
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('signupName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+
+    if (!name || !email || !password) {
+        showAlert('signupAlert', 'Please fill in all fields', 'alert-error');
+        return;
+    }
+
+    if (password.length < 6) {
+        showAlert('signupAlert', 'Password must be at least 6 characters long', 'alert-error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, email, password }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('signupAlert', 'Signup successful! Please login.', 'alert-success');
+            
+            // Clear form
+            document.getElementById('signupForm').reset();
+            
+            // Switch to login modal after delay
+            setTimeout(() => {
+                closeModal('signupModal');
+                openModal('loginModal');
+            }, 2000);
+        } else {
+            showAlert('signupAlert', data.message || 'Signup failed', 'alert-error');
+        }
+    } catch (error) {
+        console.error('Signup error:', error);
+        showAlert('signupAlert', 'Network error. Please try again.', 'alert-error');
+    }
+});
+
+
+function logout() {
+    localStorage.removeItem('token');
+    currentUser = null;
+    isLoggedIn = false;
+    cart = [];
+    updateAuthState();
+    updateCartDisplay();
+    
+    
+    loadProducts();
+}
+
+// Add item to cart
+function addToCart(productName, price) {
+    if (!isLoggedIn) {
+        showAlert('loginAlert', 'Please sign in to add items to cart', 'alert-warning');
+        openModal('loginModal');
+        return;
+    }
+
+    const product = productMap[productName];
+    if (!product) {
+        alert(`${productName} not found. Please refresh the page.`);
+        return;
+    }
+
+    if (product.quantity <= 0) {
+        alert(`${productName} is out of stock.`);
+        return;
+    }
+
+    const existingItem = cart.find(item => item.name === productName);
+    const alreadyInCart = existingItem ? existingItem.quantity : 0;
+
+    if (alreadyInCart >= product.quantity) {
+        alert(`Only ${product.quantity} items of ${productName} available in stock.`);
+        return;
+    }
+
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            name: productName,
+            price: price,
+            quantity: 1
+        });
+    }
+
+    updateCartDisplay();
+    
+    const remainingStock = product.quantity - (alreadyInCart + 1);
+    if (remainingStock <= 2 && remainingStock > 0) {
+        alert(`${productName} added to cart! Only ${remainingStock} left in stock.`);
+    }
+}
+
+// Update cart display
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cartItems');
+    const cartCount = document.getElementById('cartCount');
+    const cartTotal = document.getElementById('cartTotal');
+    const cartBadge = document.getElementById('cartBadge');
+
+    cartItems.innerHTML = '';
+    let total = 0;
+    let itemCount = 0;
+
+    cart.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'cart-item';
+        
+        itemDiv.innerHTML = `
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">₹${item.price} each</div>
+            </div>
+            <div class="cart-item-controls">
+                <button class="quantity-btn" onclick="changeQuantity(${index}, -1)">-</button>
+                <span style="margin: 0 8px; color: #4facfe; font-weight: bold;">${item.quantity}</span>
+                <button class="quantity-btn" onclick="changeQuantity(${index}, 1)">+</button>
+                <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
+            </div>
+        `;
+        
+        cartItems.appendChild(itemDiv);
+        total += item.price * item.quantity;
+        itemCount += item.quantity;
+    });
+
+    cartCount.textContent = itemCount;
+    cartTotal.textContent = total;
+    cartBadge.textContent = itemCount;
+    
+    // Hide cart button if no items
+    const cartToggleBtn = document.getElementById('cartToggleBtn');
+    if (itemCount === 0) {
+        cartToggleBtn.style.display = 'none';
+    } else {
+        cartToggleBtn.style.display = 'flex';
+    }
+}
+
+function toggleCart() {
+    const cart = document.getElementById('cart');
+    cart.classList.toggle('show');
+    
+    // Close cart when clicking outside
+    if (cart.classList.contains('show')) {
+        document.addEventListener('click', function closeCart(e) {
+            if (!cart.contains(e.target) && !e.target.closest('.cart-toggle-btn')) {
+                cart.classList.remove('show');
+                document.removeEventListener('click', closeCart);
+            }
+        });
+    }
+}
+
+// Change quantity in cart
+function changeQuantity(index, change) {
+    const item = cart[index];
+    const product = productMap[item.name];
+    
+    if (!product) {
+        alert('Product not found. Please refresh the page.');
+        return;
+    }
+    
+    if (change > 0 && item.quantity >= product.quantity) {
+        alert(`Only ${product.quantity} items of ${item.name} available in stock.`);
+        return;
+    }
+    
+    item.quantity += change;
+    
+    if (item.quantity <= 0) {
+        cart.splice(index, 1);
+    }
+    
+    updateCartDisplay();
+}
+
+// Remove item from cart
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartDisplay();
+}
+
+
+function checkout() {
+    if (!isLoggedIn) {
+        showAlert('loginAlert', 'Please sign in to place an order', 'alert-warning');
+        openModal('loginModal');
+        return;
+    }
+
+    if (cart.length === 0) {
+        alert('Your cart is empty');
+        return;
+    }
+
+    // Check stock availability before proceeding
+    const stockIssues = [];
+    cart.forEach(item => {
+        const product = productMap[item.name];
+        if (!product) {
+            stockIssues.push(`${item.name} not found`);
+        } else if (product.quantity < item.quantity) {
+            stockIssues.push(`${item.name}: Only ${product.quantity} available, you have ${item.quantity} in cart`);
+        }
+    });
+
+    if (stockIssues.length > 0) {
+        alert('Stock issues found:\n' + stockIssues.join('\n') + '\n\nPlease update your cart.');
+        return;
+    }
+
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    pendingOrder = {
+        items: cart.map(item => ({...item})),
+        total: total
+    };
+
+    showOrderSummary();
+    openModal('orderModal');
+}
+
+
+function showOrderSummary() {
+    const summaryDiv = document.getElementById('orderSummary');
+    
+    let summaryHTML = '<h4>Order Summary:</h4>';
+    
+    pendingOrder.items.forEach(item => {
+        summaryHTML += `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(79, 172, 254, 0.1); border-radius: 5px;">
+                <span>${item.name} x ${item.quantity}</span>
+                <span>₹${item.price * item.quantity}</span>
+            </div>
+        `;
+    });
+    
+    summaryHTML += `
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #4facfe; font-size: 1.2em; font-weight: bold; color: #4facfe;">
+            Total: ₹${pendingOrder.total}
+        </div>
+        <div style="margin-top: 10px; color: #a0a0a0; font-size: 0.9em;">
+            Note: Stock will be automatically updated after order confirmation.
+        </div>
+    `;
+    
+    summaryDiv.innerHTML = summaryHTML;
+}
+// Replace the existing checkout function with this updated version
+function checkout() {
+    if (!isLoggedIn) {
+        showAlert('loginAlert', 'Please sign in to place an order', 'alert-warning');
+        openModal('loginModal');
+        return;
+    }
+
+    if (cart.length === 0) {
+        alert('Your cart is empty');
+        return;
+    }
+
+    // Check stock availability before proceeding
+    const stockIssues = [];
+    cart.forEach(item => {
+        const product = productMap[item.name];
+        if (!product) {
+            stockIssues.push(`${item.name} not found`);
+        } else if (product.quantity < item.quantity) {
+            stockIssues.push(`${item.name}: Only ${product.quantity} available, you have ${item.quantity} in cart`);
+        }
+    });
+
+    if (stockIssues.length > 0) {
+        alert('Stock issues found:\n' + stockIssues.join('\n') + '\n\nPlease update your cart.');
+        return;
+    }
+
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    pendingOrder = {
+        items: cart.map(item => ({...item})),
+        total: total
+    };
+
+    // Show address form first (not order summary)
+    showAddressForm();
+    openModal('orderModal');
+}
+
+// Add this new function to show address form
+function showAddressForm() {
+    document.getElementById('addressSection').style.display = 'block';
+    document.getElementById('summarySection').style.display = 'none';
+    
+    // Clear any previous form data
+    document.getElementById('addressForm').reset();
+    
+    // Clear any alerts
+    const orderAlert = document.getElementById('orderAlert');
+    orderAlert.style.display = 'none';
+}
+
+function proceedToOrderSummary() {
+    // Validate form structure
+    const form = document.getElementById('addressForm');
+    if (!form.checkValidity()) {
+        showAlert('orderAlert', 'Please fill in all required fields', 'alert-error');
+        return;
+    }
+
+    // Gather form data
+    const addressData = {
+        fullName: document.getElementById('fullName').value.trim(),
+        phoneNumber: document.getElementById('phoneNumber').value.trim(),
+        addressLine1: document.getElementById('addressLine1').value.trim(),
+        addressLine2: document.getElementById('addressLine2').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        pincode: document.getElementById('pincode').value.trim(),
+        state: document.getElementById('state').value.trim()
+    };
+
+    // Phone validation
+    const phonePattern = /^[0-9]{10}$/;
+    if (!phonePattern.test(addressData.phoneNumber)) {
+        showAlert('orderAlert', 'Please enter a valid 10-digit phone number', 'alert-error');
+        return;
+    }
+
+    // PIN code validation
+    const pincodePattern = /^[0-9]{6}$/;
+    if (!pincodePattern.test(addressData.pincode)) {
+        showAlert('orderAlert', 'Please enter a valid 6-digit PIN code', 'alert-error');
+        return;
+    }
+
+    // Save to pending order
+    pendingOrder.address = addressData;
+
+    // Show summary section
+    showOrderSummaryWithAddress();
+}
+
+
+// Add this new function to show order summary with address
+function showOrderSummaryWithAddress() {
+    document.getElementById('addressSection').style.display = 'none';
+    document.getElementById('summarySection').style.display = 'block';
+    
+    // Clear any alerts
+    const orderAlert = document.getElementById('orderAlert');
+    orderAlert.style.display = 'none';
+    
+    // Populate delivery address display
+    const deliveryAddressDiv = document.getElementById('deliveryAddress');
+    const addr = pendingOrder.address;
+    if (!pendingOrder || !pendingOrder.items || !pendingOrder.total) {
+    showAlert('orderAlert', 'Order data is incomplete', 'alert-error');
+    return;
+}
+
+    deliveryAddressDiv.innerHTML = `
+        <h4>Delivery Address:</h4>
+        <div style="background: rgba(40, 40, 80, 0.5); padding: 15px; border-radius: 10px; margin: 10px 0;">
+            <strong>${addr.fullName}</strong><br>
+            ${addr.phoneNumber}<br>
+            ${addr.addressLine1}<br>
+            ${addr.addressLine2 ? addr.addressLine2 + '<br>' : ''}
+            ${addr.city}, ${addr.state} - ${addr.pincode}
+        </div>
+    `;
+    
+    // Populate order summary
+    const orderSummaryDiv = document.getElementById('orderSummary');
+    
+    let summaryHTML = '<h4>Order Items:</h4>';
+    
+    pendingOrder.items.forEach(item => {
+        summaryHTML += `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(79, 172, 254, 0.1); border-radius: 5px;">
+                <span>${item.name} x ${item.quantity}</span>
+                <span>₹${item.price * item.quantity}</span>
+            </div>
+        `;
+    });
+    
+    summaryHTML += `
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #4facfe; font-size: 1.2em; font-weight: bold; color: #4facfe;">
+            Total: ₹${pendingOrder.total}
+        </div>
+        <div style="margin-top: 10px; color: #a0a0a0; font-size: 0.9em;">
+            Note: Stock will be automatically updated after order confirmation.
+        </div>
+    `;
+    
+    orderSummaryDiv.innerHTML = summaryHTML;
+}
+
+// Add this new function to go back to address form
+function backToAddress() {
+    document.getElementById('addressSection').style.display = 'block';
+    document.getElementById('summarySection').style.display = 'none';
+    
+    // Clear any alerts
+    const orderAlert = document.getElementById('orderAlert');
+    orderAlert.style.display = 'none';
+}
+
+// Update the confirmOrder function to include address data
+async function confirmOrder() {
+    if (!pendingOrder || !pendingOrder.deliveryAddress) {
+        alert('Please complete the address form first');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please login again');
+            return;
+        }
+
+        // Disable the confirm button to prevent double-clicking
+        const confirmBtn = document.querySelector('#summarySection .btn-primary');
+        const originalText = confirmBtn.textContent;
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="loading"></span> Processing...';
+
+        const response = await fetch('/api/place-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(pendingOrder)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Order successful
+            showAlert('orderAlert', `Order placed successfully! Order ID: ${data.orderId}`, 'alert-success');
+            
+            // Clear cart
+            cart = [];
+            updateCartDisplay();
+            
+            // Close modal after delay
+            setTimeout(() => {
+                closeModal('orderModal');
+                // Reload products to reflect updated stock
+                loadProducts();
+            }, 3000);
+            
+            // Reset pending order
+            pendingOrder = null;
+            
+        } else {
+            showAlert('orderAlert', data.message || 'Order failed', 'alert-error');
+        }
+
+    } catch (error) {
+        console.error('Order confirmation error:', error);
+        showAlert('orderAlert', 'Network error. Please try again.', 'alert-error');
+    } finally {
+        // Re-enable the confirm button
+        const confirmBtn = document.querySelector('#summarySection .btn-primary');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = originalText;
+        }
+    }
+}
+
+// Add these functions to the global scope
+window.proceedToOrderSummary = proceedToOrderSummary;
+window.backToAddress = backToAddress;
+
+// Confirm order
+async function confirmOrder() {
+    if (!pendingOrder) {
+        alert('No order to confirm');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Please login again');
+            return;
+        }
+        console.log("Payload being sent:", pendingOrder);
+
+        // Disable the confirm button to prevent double-clicking
+        const confirmBtn = document.querySelector('#orderModal .btn-primary');
+        const originalText = confirmBtn.textContent;
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="loading"></span> Processing...';
+
+        const response = await fetch('/api/place-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(pendingOrder)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Order successful
+            showAlert('orderAlert', `Order placed successfully! Order ID: ${data.orderId}`, 'alert-success');
+            
+            // Clear cart
+            cart = [];
+            updateCartDisplay();
+            
+            // Close modal after delay
+            setTimeout(() => {
+                closeModal('orderModal');
+                // Reload products to reflect updated stock
+                loadProducts();
+            }, 3000);
+            
+            // Reset pending order
+            pendingOrder = null;
+            
+        } else {
+            showAlert('orderAlert', data.message || 'Order failed', 'alert-error');
+        }
+
+    } catch (error) {
+        console.error('Order confirmation error:', error);
+        showAlert('orderAlert', 'Network error. Please try again.', 'alert-error');
+    } finally {
+        // Re-enable the confirm button
+        const confirmBtn = document.querySelector('#orderModal .btn-primary');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+    }
+}
+
+// Forgot Password functionality
+function openForgotPassword() {
+    closeModal('loginModal');
+    openModal('forgotPasswordModal');
+}
+
+function backToLogin() {
+    closeModal('forgotPasswordModal');
+    openModal('loginModal');
+}
+
+// Handle forgot password form submission
+document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotPasswordEmail').value;
+
+    if (!email) {
+        showAlert('forgotPasswordAlert', 'Please enter your email address', 'alert-error');
+        return;
+    }
+
+    try {
+        // Disable submit button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading"></span> Sending...';
+
+        const response = await fetch('/api/forgot-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('forgotPasswordAlert', 
+                'Password reset link sent! Please check your email (including spam folder).', 
+                'alert-success'
+            );
+            
+            // Clear form
+            document.getElementById('forgotPasswordForm').reset();
+            
+            // Close modal after 5 seconds
+            setTimeout(() => {
+                closeModal('forgotPasswordModal');
+            }, 5000);
+        } else {
+            showAlert('forgotPasswordAlert', data.message || 'Failed to send reset link', 'alert-error');
+        }
+
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        showAlert('forgotPasswordAlert', 'Network error. Please try again.', 'alert-error');
+        
+        // Re-enable button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Reset Link';
+    }
+});
+
+
+function refreshProducts() {
+    loadProducts();
+}
+
+
+function debugCart() {
+    console.log('Current cart:', cart);
+    console.log('Product map:', productMap);
+    console.log('Is logged in:', isLoggedIn);
+    console.log('Current user:', currentUser);
+}
+
+
+window.addToCart = addToCart;
+window.changeQuantity = changeQuantity;
+window.removeFromCart = removeFromCart;
+window.checkout = checkout;
+window.confirmOrder = confirmOrder;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.logout = logout;
+window.refreshProducts = refreshProducts;
+window.debugCart = debugCart;
+window.toggleCart = toggleCart;
+</script>
+</body>
+</html>
