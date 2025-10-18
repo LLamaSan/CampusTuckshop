@@ -1,4 +1,5 @@
-import connectDB from '../src/config/db';
+import connectDB from '../src/config/db.js';
+import authenticateToken from '../src/middleware/authenticateToken.js';
 import {
   getAllProducts,
   addProduct,
@@ -6,19 +7,27 @@ import {
   renameProduct,
   bulkCategoryUpdate,
   bulkUpdateDetails,
-  categoryByPattern
-  // Import any other controllers you had, like updatePrice, updateQuantity, etc.
-} from '../src/controllers/productController';
+  categoryByPattern,
+  bulkAddProducts 
+  // Import any other controllers you had...
+} from '../src/controllers/productController.js';
+
+// Helper function to run middleware in Vercel
+const runMiddleware = (req, res, fn) => {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+};
 
 export default async function handler(req, res) {
   try {
     await connectDB();
 
-    // Vercel puts all URL parts after 'products/' into req.query.slug
-    // e.g., /api/products/rename -> req.query.slug = ['rename']
-    // e.g., /api/products/some-product-name -> req.query.slug = ['some-product-name']
-    // e.g., /api/products -> req.query.slug = undefined
-    
     const slug = req.query.slug;
     let path;
     
@@ -28,14 +37,27 @@ export default async function handler(req, res) {
         return await getAllProducts(req, res);
       }
       if (req.method === 'POST') {
+        // You should probably protect this route too
+        // await runMiddleware(req, res, authenticateToken);
         return await addProduct(req, res);
       }
     } else {
       // This is a request to /api/products/...
-      path = slug[0]; // Get the first part, e.g., 'rename' or 'some-product-name'
+      path = slug[0]; // Get the first part, e.g., 'rename' or 'bulk-add'
       
+      // Handle specific POST routes
+      if (req.method === 'POST') {
+        if (path === 'bulk-add') {
+          // Protect this admin-only route
+          await runMiddleware(req, res, authenticateToken);
+          return await bulkAddProducts(req, res);
+        }
+      }
+
       // Handle specific PUT routes
       if (req.method === 'PUT') {
+        // You should protect these admin routes too
+        // await runMiddleware(req, res, authenticateToken);
         switch (path) {
           case 'rename':
             return await renameProduct(req, res);
@@ -45,23 +67,13 @@ export default async function handler(req, res) {
             return await bulkUpdateDetails(req, res);
           case 'category-by-pattern':
             return await categoryByPattern(req, res);
-          // Add cases for 'update-price', 'update-quantity', etc.
         }
       }
-      
-      // Handle GET by category (assuming you have a file for this)
-      if (req.method === 'GET') {
-        // We assume if it's not a known path, it's a category request.
-        // You might need to adjust this logic based on your controller.
-        // req.params = { category: path };
-        // return await getProductsByCategory(req, res);
-      }
 
-      // Handle DELETE by name. This is the catch-all for /api/products/[name]
+      // Handle DELETE by name.
       if (req.method === 'DELETE') {
-        // This is /api/products/[name]
-        // The old [name].js expected req.query.name.
-        // req.query.slug will be ['product-name']
+        // Protect this admin-only route
+        // await runMiddleware(req, res, authenticateToken);
         req.params = { name: path }; 
         return await deleteProductByName(req, res);
       }

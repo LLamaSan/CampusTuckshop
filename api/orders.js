@@ -1,6 +1,6 @@
-import connectDB from '../src/config/db';
-import { getAllOrders, placeOrder } from '../src/controllers/orderController';
-import authenticateToken from '../src/middleware/authenticateToken';
+import connectDB from '../src/config/db.js';
+import { getAllOrders, placeOrder } from '../src/controllers/orderController.js';
+import authenticateToken from '../src/middleware/authenticateToken.js';
 
 // Helper function to run middleware in Vercel
 const runMiddleware = (req, res, fn) => {
@@ -22,8 +22,6 @@ export default async function handler(req, res) {
     await runMiddleware(req, res, authenticateToken);
 
     // Get the last part of the URL (e.g., 'orders', 'place')
-    // req.url for /api/orders will be /api/orders
-    // req.url for /api/orders/place will be /api/orders/place
     const path = req.url.split('/').pop();
     
     if (path === 'orders' && req.method === 'GET') {
