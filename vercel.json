@@ -10,7 +10,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "src/**"
+          "../src/**"  
         ]
       }
     }
