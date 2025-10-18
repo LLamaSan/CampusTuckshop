@@ -1,23 +1,41 @@
-// src/config/db.js
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
-    try {
-        console.log('Attempting to connect to MongoDB...');
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('MongoDB connected successfully');
-    } catch (err) {
-        console.error('MongoDB connection error:', err.message);
-        // Exit process with failure
-        process.exit(1);
-    }
+// This caching logic is crucial for serverless environments.
+// It prevents creating a new database connection on every API call.
+let cached = global.mongoose;
 
-    mongoose.connection.on('disconnected', () => {
-        console.log('Disconnected from MongoDB');
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+  if (cached.conn) {
+    console.log("Using cached MongoDB connection.");
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false, // Recommended for serverless environments
+    };
+
+    console.log("Creating new MongoDB connection promise.");
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
+      console.log("New MongoDB connection established.");
+      return mongoose;
     });
-};
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null; // Clear the promise on error so we can try again
+    console.error("MongoDB connection error:", e);
+    throw e; // Re-throw the error to fail the function
+  }
+
+  return cached.conn;
+}
 
 module.exports = connectDB;
+
