@@ -1,6 +1,6 @@
-import connectDB from '../src/config/db.js';
-import { getAllOrders, placeOrder } from '../src/controllers/orderController.js';
-import authenticateToken from '../src/middleware/authenticateToken.js';
+import connectDB from './config/db.js';
+import { getAllOrders, placeOrder } from './controllers/orderController.js';
+import authenticateToken from './middleware/authenticateToken.js';
 
 // Helper function to run middleware in Vercel
 const runMiddleware = (req, res, fn) => {
