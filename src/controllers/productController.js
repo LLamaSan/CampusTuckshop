@@ -1,4 +1,47 @@
-const Product = require('../models/Product');
+import Product from '../models/Product.js';
+
+// Get all products
+export const getAllProducts = async (req, res) => {
+  try {
+    // This line was failing. With the corrected import, Product is now a valid Mongoose model.
+    const products = await Product.find({});
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+// Add a single product
+export const addProduct = async (req, res) => {
+  try {
+    const { name, category, price, quantity, imageUrl } = req.body;
+
+    if (!name || !category || price == null || quantity == null || !imageUrl) {
+      return res.status(400).json({ success: false, message: 'Missing required product fields' });
+    }
+
+    const newProduct = await Product.create({
+      name,
+      category,
+      price,
+      quantity,
+      imageUrl
+    });
+
+    res.status(201).json({ success: true, data: newProduct });
+  } catch (error) {
+    console.error('Error adding product:', error);
+    if (error.code === 11000) {
+       return res.status(409).json({ success: false, message: `Product with name '${req.body.name}' already exists.` });
+    }
+    res.status(500).json({ success: false, message: 'Error adding product' });
+  }
+};
+
+// ... (Your other controller functions like bulkAddProducts, deleteProductByName, etc., would go here)
+// Make sure each one also correctly uses the imported Product model.
+
 
 // GET /api/products - Get all products
 exports.getAllProducts = async (req, res) => {
