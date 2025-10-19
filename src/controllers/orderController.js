@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+import Product from '../models/Product.js'; 
 const { generateOrderId } = require('../utils/helpers'); // Assuming you created this file
 const { sendOrderConfirmationEmail } = require('../services/emailService');
 
