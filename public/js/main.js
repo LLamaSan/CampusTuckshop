@@ -543,7 +543,7 @@ async function confirmOrder() {
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<span class="loading"></span> Processing...';
 
-        const response = await fetch('/api/orders', {
+        const response = await fetch('/api/orders/place', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
