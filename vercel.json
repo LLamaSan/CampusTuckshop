@@ -12,10 +12,6 @@
   ],
   "routes": [
     {
-      "src": "/api/debug",
-      "dest": "/src/api/debug.js"
-    },
-    {
       "src": "/api/auth/(.*)",
       "dest": "/src/api/auth.js"
     },
