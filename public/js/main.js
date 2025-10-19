@@ -52,6 +52,41 @@ function toggleMenu() {
         });
     }
 }
+
+// PASTE THIS ENTIRE FUNCTION INTO YOUR main.js FILE
+
+function handleAddToCart(event) {
+  const button = event.target;
+  // 1. Read the product's unique ID from the button's data attributes
+  const productId = button.dataset.productId; 
+  const name = button.dataset.name;
+  const price = parseFloat(button.dataset.price);
+
+  if (!productId) {
+    console.error("Could not find product ID on the button.");
+    return;
+  }
+
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const existingItem = cart.find(item => item.productId === productId);
+
+  if (existingItem) {
+    existingItem.quantity++;
+  } else {
+    // 2. Add the new item to the cart, INCLUDING the productId
+    cart.push({
+      productId: productId, // <-- This is the crucial field the backend needs
+      name: name,
+      price: price,
+      quantity: 1
+    });
+  }
+
+  localStorage.setItem('cart', JSON.stringify(cart));
+  alert(`${name} has been added to your cart!`);
+  // You should also update a visual cart counter here if you have one.
+}
+
 // Load products from server
 async function loadProducts() {
     try {
@@ -114,14 +149,14 @@ function renderCategories(categories) {
             const isOutOfStock = product.quantity <= 0;
             
             productDiv.innerHTML = `
-                <img src="${product.imageUrl}" alt="${product.name}" class="product-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDI1MCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyNTAiIGhlaWdodD0iMjUwIiBmaWxsPSIjNDA0MDgwIi8+Cjx0ZXh0IHg9IjEyNSIgeT0iMTI1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZTBlMGUwIiBmb250LXNpemU9IjE2cHgiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4='" />
-                <div class="product-name">${product.name}</div>
-                <div class="product-price">₹${product.price}</div>
-                <div class="product-stock ${stockStatus.class}">${stockStatus.text}</div>
-                <button class="add-to-cart" ${isOutOfStock ? 'disabled' : ''} onclick="addToCart('${product.name.replace(/'/g, "\\'")}', ${product.price})">
-                    ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-                </button>
-            `;
+    <img src="${product.imageUrl}" alt="${product.name}" class="product-img" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUwIiBoZWlnaHQ9IjI1MCIgdmlld0JveD0iMCAwIDI1MCAyNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyNTAiIGhlaWdodD0iMjUwIiBmaWxsPSIjNDA0MDgwIi8+Cjx0ZXh0IHg9IjEyNSIgeT0iMTI1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZTBlMGUwIiBmb250LXNpemU9IjE2cHgiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4='" />
+    <div class="product-name">${product.name}</div>
+    <div class="product-price">₹${product.price}</div>
+    <div class="product-stock ${stockStatus.class}">${stockStatus.text}</div>
+    <button class="add-to-cart" ${isOutOfStock ? 'disabled' : ''} onclick="addToCart('${product._id}', '${product.name.replace(/'/g, "\\'")}', ${product.price})">
+        ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+    </button>
+`;
             
             productsDiv.appendChild(productDiv);
         });
@@ -299,8 +334,9 @@ function logout() {
     loadProducts();
 }
 
-// Add item to cart
-function addToCart(productName, price) {
+// ---  addToCart FUNCTION ---
+
+function addToCart(productId, productName, price) {
     if (!isLoggedIn) {
         showAlert('loginAlert', 'Please sign in to add items to cart', 'alert-warning');
         openModal('loginModal');
@@ -313,7 +349,8 @@ function addToCart(productName, price) {
         return;
     }
 
-    const existingItem = cart.find(item => item.name === productName);
+    // Use the more reliable productId to find the item in the cart
+    const existingItem = cart.find(item => item.productId === productId);
     const alreadyInCart = existingItem ? existingItem.quantity : 0;
 
     if (alreadyInCart >= product.quantity) {
@@ -324,7 +361,13 @@ function addToCart(productName, price) {
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({ name: productName, price: price, quantity: 1 });
+        // Add the new item to the cart, including the productId
+        cart.push({ 
+            productId: productId, // <-- This is the crucial field for the backend
+            name: productName, 
+            price: price, 
+            quantity: 1 
+        });
     }
 
     updateCartDisplay();
