@@ -1,5 +1,5 @@
-import connectDB from './config/db.js';
-import { forgotPassword, verifyResetToken, resetPassword } from './controllers/passwordController.js';
+import connectDB from '../config/db.js';
+import { forgotPassword, verifyResetToken, resetPassword } from '../controllers/passwordController.js';
 
 export default async function handler(req, res) {
   try {

@@ -1,5 +1,5 @@
-import connectDB from './config/db.js';
-import authenticateToken from './middleware/authenticateToken.js';
+import connectDB from '../config/db.js';
+import authenticateToken from '../middleware/authenticateToken.js';
 import {
   getAllProducts,
   addProduct,
@@ -10,7 +10,7 @@ import {
   categoryByPattern,
   bulkAddProducts 
   // Import any other controllers you had...
-} from './controllers/productController.js';
+} from '../controllers/productController.js';
 
 // Helper function to run middleware in Vercel
 const runMiddleware = (req, res, fn) => {

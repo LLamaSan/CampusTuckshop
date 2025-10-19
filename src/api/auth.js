@@ -1,6 +1,6 @@
-import connectDB from './config/db.js';
-import { login, signup, verifyToken } from './controllers/authController.js';
-import authenticateToken from './middleware/authenticateToken.js';
+import connectDB from '../config/db.js';
+import { login, signup, verifyToken } from '../controllers/authController.js';
+import authenticateToken from '../middleware/authenticateToken.js';
 
 // Helper function to run middleware in Vercel
 const runMiddleware = (req, res, fn) => {
