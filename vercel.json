@@ -12,8 +12,24 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/src/api/$1.js"
+      "src": "/api/auth/(.*)",
+      "dest": "/src/api/auth.js"
+    },
+    {
+      "src": "/api/orders/(.*)",
+      "dest": "/src/api/orders.js"
+    },
+    {
+      "src": "/api/password/(.*)",
+      "dest": "/src/api/password.js"
+    },
+    {
+      "src": "/api/products",
+      "dest": "/src/api/products.js"
+    },
+    {
+      "src": "/api/products/(.*)",
+      "dest": "/src/api/products.js"
     },
     {
       "src": "/(.*\\..*)",
