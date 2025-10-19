@@ -2,17 +2,21 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import { sendOrderConfirmationEmail } from '../services/emailService.js';
-// We'll assume a simple helper for now, but you can create this file if needed
-// import { generateOrderId } from '../utils/helpers.js';
+// 1. Import the new helper function
+import { generateOrderId } from '../utils/helpers.js';
 
-// --- Place a new order (combining your logic with correct syntax) ---
+// --- Place a new order ---
 export const placeOrder = async (req, res) => {
     try {
-        // 1. Get data from the request and the authenticated user
         const { items, address } = req.body;
-        const userId = req.user.id; // Get user ID from the token middleware
 
-        // 2. Validate incoming data (from your code)
+        // 2. Get all required user details from the authentication token
+        if (!req.user || !req.user.id || !req.user.name || !req.user.email) {
+            return res.status(401).json({ success: false, message: 'Authentication error: User details not found in token.' });
+        }
+        const { id: userId, name: userName, email: userEmail } = req.user;
+
+        // --- Your existing validation (this is great!) ---
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Order items are required' });
         }
@@ -20,59 +24,55 @@ export const placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Complete delivery address is required' });
         }
 
-        console.log('🛒 Processing order for user ID:', userId);
+        console.log('🛒 Processing order for user:', userName);
 
-        // 3. Securely calculate total and check stock (your excellent logic)
+        // --- Your existing Stock & Price Verification logic ---
         let total = 0;
         const stockErrors = [];
         const updatedOrderItems = [];
-
         for (const item of items) {
-            const product = await Product.findById(item.productId); // Use findById for consistency
+            const product = await Product.findById(item.productId); // Using findById which is more direct
             if (!product) {
                 stockErrors.push(`Product "${item.name}" not found`);
                 continue;
             }
             if (product.quantity < item.quantity) {
-                stockErrors.push(`${product.name}: Only ${product.quantity} available, you requested ${item.quantity}`);
+                stockErrors.push(`${product.name}: Only ${product.quantity} left`);
                 continue;
             }
-            // Use the database price for security
             total += product.price * item.quantity;
-            updatedOrderItems.push({ ...item, price: product.price }); // Use the real price
+            updatedOrderItems.push({ ...item, price: product.price });
         }
-
         if (stockErrors.length > 0) {
             return res.status(400).json({ success: false, message: 'Stock unavailable: ' + stockErrors.join('; ') });
         }
-        
-        // 4. Create the new order with verified data
+
+        // 3. Create the order object with ALL required fields
+        const orderId = generateOrderId(); // Generate the unique ID
         const newOrder = await Order.create({
-            user: userId,
+            orderId,      // <-- Field Added
+            userId,       // <-- Field Added
+            userEmail,    // <-- Field Added
+            userName,     // <-- Field Added
             items: updatedOrderItems,
             total,
             address,
-            status: 'pending' // Default status
+            status: 'pending'
         });
 
-        console.log(`✅ Order created: ${newOrder._id}`);
-
-        // 5. Update stock quantities after the order is successfully created
+        // --- Your existing Stock Update logic ---
         for (const item of updatedOrderItems) {
-            await Product.updateOne(
-                { _id: item.productId },
-                { $inc: { quantity: -item.quantity } } // Atomically decrease quantity
-            );
-            console.log(`📉 Stock updated for product ID: ${item.productId}`);
+            await Product.updateOne({ _id: item.productId }, { $inc: { quantity: -item.quantity } });
         }
+        console.log(`✅ Order created: ${orderId}`);
 
-        // 6. Send the confirmation email (non-blocking)
-        sendOrderConfirmationEmail(userId, newOrder);
+        // --- Your existing Email logic ---
+        sendOrderConfirmationEmail(userId, newOrder)
+            .catch(err => console.error('📧 Email error (non-blocking):', err));
 
-        // 7. Send success response to the user
         res.status(201).json({
             success: true,
-            orderId: newOrder._id,
+            orderId: newOrder.orderId,
             message: 'Order placed successfully!'
         });
 
@@ -83,10 +83,13 @@ export const placeOrder = async (req, res) => {
 };
 
 // --- Get orders for the authenticated user ---
-// Renamed for consistency with our previous controllers
+// Renamed the function for consistency, but kept your logic.
 export const getAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 });
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: 'Authentication error' });
+        }
+        const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: orders });
     } catch (error) {
         console.error('Get orders error:', error);
