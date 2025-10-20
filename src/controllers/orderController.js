@@ -67,8 +67,7 @@ export const placeOrder = async (req, res) => {
         
         // --- Send Email (Non-Blocking for a fast response) ---
         // The 'await' is removed, and the debug logs are gone.
-        sendOrderConfirmationEmail(userId, newOrder)
-            .catch(err => console.error('📧 Email error (non-blocking):', err));
+        await sendOrderConfirmationEmail(userId, newOrder);
 
         res.status(201).json({
             success: true,
