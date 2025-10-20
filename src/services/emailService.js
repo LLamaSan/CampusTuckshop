@@ -20,8 +20,7 @@ const sender = {
     email: BREVO_FROM_EMAIL,
     name: BREVO_FROM_NAME
 };
-
-// --- Main Decorative Template Function ---
+// --- Main Decorative Template Function (Redesigned) ---
 const createHtmlTemplate = (title, content) => `
 <!DOCTYPE html>
 <html>
@@ -49,7 +48,7 @@ const createHtmlTemplate = (title, content) => `
 </html>
 `;
 
-// --- Order Confirmation Email ---
+// --- Order Confirmation Email (Heavily Updated) ---
 export const sendOrderConfirmationEmail = async (userId, order) => {
     if (!apiInstance) return;
 
@@ -60,29 +59,49 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
             return;
         }
 
-        // Fetch product details to get image URLs
+        // Fetch product details to get image URLs (your existing logic is perfect)
         const detailedItems = await Promise.all(order.items.map(async (item) => {
             const product = await Product.findById(item.productId);
             return {
                 ...item.toObject(),
-                imageUrl: product ? product.imageUrl : 'https://placehold.co/60x60/404080/e0e0e0?text=N/A' // Fallback image
+                imageUrl: product ? product.imageUrl : 'https://placehold.co/60x60/16213e/e0e0e0?text=N/A' // Fallback image
             };
         }));
 
         const subject = `Your Order is Confirmed!`;
+
+        // --- NEW: Generate HTML for the list of items with images ---
         const itemsHtml = detailedItems.map(item => 
-            `<div style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2c2c54;">
-                <img src="${item.imageUrl}" alt="${item.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover;">
+            `<div style="display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #2c2c54;">
+                <img src="${item.imageUrl}" alt="${item.name}" style="width: 50px; height: 50px; border-radius: 8px; margin-right: 15px; object-fit: cover; border: 1px solid #2c2c54;">
                 <div style="flex-grow: 1;">
-                    <span style="font-weight: bold; color: #ffffff;">${item.name}</span>
-                    <span style="color: #a0a0a0;">(x${item.quantity})</span>
+                    <span style="font-weight: bold; color: #ffffff; font-size: 16px;">${item.name}</span>
+                    <span style="color: #a0a0a0; font-size: 14px;"> (x${item.quantity})</span>
                 </div>
-                <div style="font-weight: bold; color: #4facfe;">₹${(item.price * item.quantity).toFixed(2)}</div>
+                <div style="font-weight: bold; color: #4facfe; font-size: 16px;">₹${(item.price * item.quantity).toFixed(2)}</div>
             </div>`
         ).join('');
+
+        // --- NEW: Generate HTML for the shipping address ---
+        const addr = order.address;
+        const addressHtml = `
+            <h3 style="color: #ffffff; border-bottom: 1px solid #4facfe; padding-bottom: 5px; margin-top: 25px; font-size: 18px;">📍 Shipping To:</h3>
+            <div style="padding: 15px; background-color: #0f172a; border-radius: 8px; margin-top: 10px; color: #e0e0e0;">
+                <strong>${addr.fullName}</strong><br>
+                ${addr.addressLine1}<br>
+                ${addr.addressLine2 ? addr.addressLine2 + '<br>' : ''}
+                ${addr.city}, ${addr.state} - ${addr.pincode}<br>
+                Phone: ${addr.phoneNumber}
+            </div>
+        `;
         
+        // --- Assemble the final email content ---
         const content = `
+            <div style="background-color: #2e8540; color: white; padding: 10px 15px; border-radius: 5px; text-align: center; font-weight: bold; margin-bottom: 25px; font-size: 16px;">
+                ✅ Order Status: Processing
+            </div>
             <p style="font-size: 16px;">Thank you for your order! We've received it and will have it ready for you shortly.</p>
+            
             <h3 style="color: #ffffff; border-bottom: 1px solid #4facfe; padding-bottom: 5px; margin-top: 25px; font-size: 18px;">Order Summary (#${order.orderId})</h3>
             <div style="margin-top: 15px;">
                 ${itemsHtml}
@@ -90,6 +109,7 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
             <div style="text-align: right; font-size: 1.4em; font-weight: bold; margin-top: 20px; padding-top: 15px; border-top: 2px solid #4facfe; color: #4facfe;">
                 Total: ₹${order.total.toFixed(2)}
             </div>
+            ${addressHtml}
         `;
         const htmlContent = createHtmlTemplate(subject, content);
 
