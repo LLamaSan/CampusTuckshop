@@ -20,7 +20,7 @@ const sender = {
     email: BREVO_FROM_EMAIL,
     name: BREVO_FROM_NAME
 };
-// --- Main Decorative Template Function (Redesigned) ---
+// --- Main Decorative Template Function (no changes) ---
 const createHtmlTemplate = (title, content) => `
 <!DOCTYPE html>
 <html>
@@ -48,17 +48,23 @@ const createHtmlTemplate = (title, content) => `
 </html>
 `;
 
-// --- Order Confirmation Email (Heavily Updated) ---
+// --- Order Confirmation Email (Corrected) ---
 export const sendOrderConfirmationEmail = async (userId, order) => {
-    if (!apiInstance) return;
+    if (!apiInstance) {
+        console.error('[EMAIL_LOG] Aborting: Brevo API key is not configured.');
+        return;
+    }
 
     try {
-         const baseUrl = 'https://campus-tuckshop.vercel.app';
+        const user = await User.findById(userId);
+        if (!user) {
+            console.error(`[EMAIL_LOG] Could not find user with ID ${userId}. Aborting email.`);
+            return;
+        }
 
-        // Fetch product details to get image URLs and prepend the base URL
+        const baseUrl = 'https://campus-tuckshop.vercel.app';
         const detailedItems = await Promise.all(order.items.map(async (item) => {
             const product = await Product.findById(item.productId);
-            // Construct the full, absolute URL for the image
             const absoluteImageUrl = product && product.imageUrl 
                 ? `${baseUrl}${product.imageUrl}` 
                 : 'https://placehold.co/60x60/16213e/e0e0e0?text=N/A';
@@ -69,8 +75,6 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
         }));
 
         const subject = `Your Order is Confirmed!`;
-
-        // --- NEW: Generate HTML for the list of items with images ---
         const itemsHtml = detailedItems.map(item => 
             `<div style="display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #2c2c54;">
                 <img src="${item.imageUrl}" alt="${item.name}" style="width: 50px; height: 50px; border-radius: 8px; margin-right: 15px; object-fit: cover; border: 1px solid #2c2c54;">
@@ -81,8 +85,7 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
                 <div style="font-weight: bold; color: #4facfe; font-size: 16px;">₹${(item.price * item.quantity).toFixed(2)}</div>
             </div>`
         ).join('');
-
-        // --- NEW: Generate HTML for the shipping address ---
+        
         const addr = order.address;
         const addressHtml = `
             <h3 style="color: #ffffff; border-bottom: 1px solid #4facfe; padding-bottom: 5px; margin-top: 25px; font-size: 18px;">📍 Shipping To:</h3>
@@ -95,13 +98,11 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
             </div>
         `;
         
-        // --- Assemble the final email content ---
         const content = `
             <div style="background-color: #2e8540; color: white; padding: 10px 15px; border-radius: 5px; text-align: center; font-weight: bold; margin-bottom: 25px; font-size: 16px;">
                 ✅ Order Status: Processing
             </div>
             <p style="font-size: 16px;">Thank you for your order! We've received it and will have it ready for you shortly.</p>
-            
             <h3 style="color: #ffffff; border-bottom: 1px solid #4facfe; padding-bottom: 5px; margin-top: 25px; font-size: 18px;">Order Summary (#${order.orderId})</h3>
             <div style="margin-top: 15px;">
                 ${itemsHtml}
@@ -115,14 +116,18 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
 
         const sendSmtpEmail = new brevo.SendSmtpEmail();
         sendSmtpEmail.sender = sender;
-        sendSmtpEmail.to = [{ email: user.email }];
+        // The error was here. The 'to' field must contain the name.
+        sendSmtpEmail.to = [{ email: user.email, name: user.name }];
         sendSmtpEmail.subject = `Order Confirmation #${order.orderId}`;
         sendSmtpEmail.htmlContent = htmlContent;
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Order confirmation email sent to ${user.email}`);
+        console.log(`[EMAIL_LOG] Email sent successfully to ${user.email}`);
     } catch (error) {
-        console.error(`Brevo email error (Order Confirmation):`, error.response ? JSON.stringify(error.response.body) : error.message);
+        console.error(`[EMAIL_LOG] CRITICAL ERROR in email service:`, error.message);
+        if (error.response && error.response.body) {
+            console.error('[EMAIL_LOG] Brevo API Response Body:', JSON.stringify(error.response.body, null, 2));
+        }
     }
 };
 

@@ -12,12 +12,6 @@ const authenticateToken = (req, res, next) => {
     
     const secret = process.env.JWT_SECRET;
 
-    // --- TEMPORARY DEBUG LOGGING ---
-    console.log('--- TOKEN VERIFICATION (Protected Route) ---');
-    console.log(`JWT_SECRET found for VERIFYING: "${secret}"`);
-    console.log(`Secret length: ${secret ? secret.length : 'NOT SET'}`);
-    console.log('------------------------------------------');
-    // --- END DEBUG ---
 
     jwt.verify(token, secret, (err, user) => {
         if (err) {
