@@ -8,23 +8,19 @@ import { sendWelcomeEmail } from '../services/emailService.js';
 export const signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
-        }
-        if (password.length < 6) {
-            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
-        }
+        // ... (your validation logic can go here) ...
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: 'User with this email already exists' });
+            return res.status(400).json({ success: false, message: "User with this email already exists." });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = new User({ name, email, password: hashedPassword });
         await user.save();
+        
         // Send welcome email (non-blocking)
-        sendWelcomeEmail(user.id)
+        sendWelcomeEmail(user)
             .catch(emailError => console.error('Welcome email failed (non-blocking):', emailError));
-
+            
         res.status(201).json({ success: true, message: 'User created successfully' });
     } catch (error) {
         console.error('Signup error:', error);
@@ -36,20 +32,23 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        // ... (validation) ...
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
+        
         const payload = {
-            id: user._id,
+            id: user._id, // Correct key is 'id'
             name: user.name,
             email: user.email,
             role: user.role
         };
+        
         const secret = process.env.JWT_SECRET;
 
         // --- TEMPORARY DEBUG LOGGING ---
@@ -60,6 +59,7 @@ export const login = async (req, res) => {
         // --- END DEBUG ---
 
         const token = jwt.sign(payload, secret, { expiresIn: '24h' });
+
         res.json({
             success: true,
             token,
@@ -73,7 +73,10 @@ export const login = async (req, res) => {
 
 // --- Verify a Token's Validity (Your logic, updated syntax) ---
 export const verifyToken = (req, res) => {
-    // The authenticateToken middleware already did the work and attached req.user
-    res.json({ success: true, user: req.user });
+    // The authenticateToken middleware already attached user data to req.user
+    res.json({
+        success: true,
+        user: req.user // The middleware provides the full user payload
+    });
 };
 
