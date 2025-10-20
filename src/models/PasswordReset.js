@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-//for forgotten password
+// Schema for storing password reset tokens
 const passwordResetSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -26,4 +26,4 @@ const passwordResetSchema = new mongoose.Schema({
     }
 });
 
-const PasswordReset = mongoose.model('PasswordReset', passwordResetSchema);
+export default mongoose.model('PasswordReset', passwordResetSchema);

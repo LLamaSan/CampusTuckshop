@@ -1,53 +1,11 @@
+// Use modern ES Module syntax for all imports
 import Product from '../models/Product.js';
 
-// Get all products
-export const getAllProducts = async (req, res) => {
-  try {
-    // This line was failing. With the corrected import, Product is now a valid Mongoose model.
-    const products = await Product.find({});
-    res.status(200).json({ success: true, data: products });
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
-  }
-};
-
-// Add a single product
-export const addProduct = async (req, res) => {
-  try {
-    const { name, category, price, quantity, imageUrl } = req.body;
-
-    if (!name || !category || price == null || quantity == null || !imageUrl) {
-      return res.status(400).json({ success: false, message: 'Missing required product fields' });
-    }
-
-    const newProduct = await Product.create({
-      name,
-      category,
-      price,
-      quantity,
-      imageUrl
-    });
-
-    res.status(201).json({ success: true, data: newProduct });
-  } catch (error) {
-    console.error('Error adding product:', error);
-    if (error.code === 11000) {
-       return res.status(409).json({ success: false, message: `Product with name '${req.body.name}' already exists.` });
-    }
-    res.status(500).json({ success: false, message: 'Error adding product' });
-  }
-};
-
-// ... (Your other controller functions like bulkAddProducts, deleteProductByName, etc., would go here)
-// Make sure each one also correctly uses the imported Product model.
-
-
 // GET /api/products - Get all products
-exports.getAllProducts = async (req, res) => {
+export const getAllProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ category: 1, name: 1 });
-        res.json({ success: true, products });
+        res.status(200).json({ success: true, data: products });
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).json({ success: false, message: 'Error fetching products' });
@@ -55,32 +13,31 @@ exports.getAllProducts = async (req, res) => {
 };
 
 // POST /api/products - Add a new product
-exports.addProduct = async (req, res) => {
+export const addProduct = async (req, res) => {
     try {
         const { name, price, quantity, imageUrl, category } = req.body;
         
-        if (!name || !price || quantity == null || !imageUrl) {
+        if (!name || price == null || quantity == null || !imageUrl || !category) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'All product fields are required (name, price, quantity, imageUrl)' 
+                message: 'All product fields are required (name, price, quantity, imageUrl, category)' 
             });
         }
 
-        const product = new Product({ 
+        const newProduct = await Product.create({ 
             name, 
             price, 
             quantity, 
             imageUrl, 
-            category: category || 'Snacks' 
+            category
         });
         
-        await product.save();
         console.log(`✅ Product added: ${name} - Quantity: ${quantity}`);
         
         res.status(201).json({ 
             success: true, 
             message: 'Product added successfully',
-            product 
+            data: newProduct 
         });
     } catch (error) {
         console.error('Error adding product:', error);
@@ -93,7 +50,7 @@ exports.addProduct = async (req, res) => {
 };
 
 // PUT /api/products/update-quantity - Update a single product's quantity
-exports.updateQuantity = async (req, res) => {
+export const updateQuantity = async (req, res) => {
     try {
         const { name, quantity } = req.body;
 
@@ -120,7 +77,7 @@ exports.updateQuantity = async (req, res) => {
 };
 
 // PUT /api/products/update-price - Update a single product's price
-exports.updatePrice = async (req, res) => {
+export const updatePrice = async (req, res) => {
     try {
         const { name, price } = req.body;
 
@@ -147,7 +104,7 @@ exports.updatePrice = async (req, res) => {
 };
 
 // PUT /api/products/bulk-update-details - Bulk update multiple products
-exports.bulkUpdateDetails = async (req, res) => {
+export const bulkUpdateDetails = async (req, res) => {
     try {
         const { updates } = req.body;
 
@@ -164,10 +121,8 @@ exports.bulkUpdateDetails = async (req, res) => {
                 continue;
             }
 
-            const query = { name };
-            if (category) query.category = category;
-
             const updateFields = {};
+            if (category) updateFields.category = category;
             if (quantity != null) updateFields.quantity = quantity;
             if (price != null) updateFields.price = price;
 
@@ -176,10 +131,10 @@ exports.bulkUpdateDetails = async (req, res) => {
                 continue;
             }
 
-            const updated = await Product.findOneAndUpdate(query, updateFields, { new: true });
+            const updated = await Product.findOneAndUpdate({ name }, updateFields, { new: true });
 
             if (!updated) {
-                errors.push(`Product not found: ${name} ${category ? `(Category: ${category})` : ''}`);
+                errors.push(`Product not found: ${name}`);
             } else {
                 results.push({ name, updated });
                 console.log(`🔄 Updated ${name}:`, updateFields);
@@ -200,7 +155,7 @@ exports.bulkUpdateDetails = async (req, res) => {
 };
 
 // POST /api/products/bulk-add - Bulk add new products
-exports.bulkAddProducts = async (req, res) => {
+export const bulkAddProducts = async (req, res) => {
     try {
         const { products } = req.body;
 
@@ -208,38 +163,12 @@ exports.bulkAddProducts = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Products array is required' });
         }
 
-        const created = [];
-        const errors = [];
-
-        for (const productData of products) {
-            const { name, price, quantity, imageUrl, category } = productData;
-
-            if (!name || price == null || quantity == null || !imageUrl) {
-                errors.push({ product: name || '(unknown)', message: 'Missing required fields' });
-                continue;
-            }
-
-            try {
-                const newProduct = new Product({
-                    name,
-                    price,
-                    quantity,
-                    imageUrl,
-                    category: category || 'Snacks'
-                });
-
-                await newProduct.save();
-                created.push(newProduct);
-                console.log(`✅ Bulk added: ${name}`);
-            } catch (err) {
-                errors.push({ product: name, message: err.message });
-            }
-        }
+        const created = await Product.insertMany(products, { ordered: false });
+        console.log(`✅ Bulk added: ${created.length} products`);
 
         res.status(201).json({
-            success: errors.length === 0,
+            success: true,
             createdCount: created.length,
-            errors,
             created
         });
 
@@ -250,7 +179,7 @@ exports.bulkAddProducts = async (req, res) => {
 };
 
 // PUT /api/products/rename - Rename a product
-exports.renameProduct = async (req, res) => {
+export const renameProduct = async (req, res) => {
     try {
         const { oldName, newName } = req.body;
 
@@ -282,7 +211,7 @@ exports.renameProduct = async (req, res) => {
 };
 
 // PUT /api/products/bulk-category-update - Bulk update product categories
-exports.bulkCategoryUpdate = async (req, res) => {
+export const bulkCategoryUpdate = async (req, res) => {
     try {
         const { updates } = req.body;
         
@@ -331,7 +260,7 @@ exports.bulkCategoryUpdate = async (req, res) => {
 };
 
 // PUT /api/products/category-by-pattern - Update categories by pattern
-exports.categoryByPattern = async (req, res) => {
+export const categoryByPattern = async (req, res) => {
     try {
         const { pattern, newCategory, matchType = 'contains' } = req.body;
         
@@ -364,7 +293,7 @@ exports.categoryByPattern = async (req, res) => {
 };
 
 // DELETE /api/products/:name - Delete a product by name
-exports.deleteProductByName = async (req, res) => {
+export const deleteProductByName = async (req, res) => {
     try {
         const name = decodeURIComponent(req.params.name);
         const deleted = await Product.findOneAndDelete({ name });
@@ -382,7 +311,7 @@ exports.deleteProductByName = async (req, res) => {
 };
 
 // DELETE /api/products/category/:category - Delete all products in a category
-exports.deleteProductsByCategory = async (req, res) => {
+export const deleteProductsByCategory = async (req, res) => {
     try {
         const { category } = req.params;
         const validCategories = ['Snacks', 'Stationery', 'Drinks'];
@@ -399,5 +328,4 @@ exports.deleteProductsByCategory = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error deleting category' });
     }
 };
-
 

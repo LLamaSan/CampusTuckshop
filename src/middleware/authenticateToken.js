@@ -1,23 +1,35 @@
-// src/middleware/authenticateToken.js
-const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+import jwt from 'jsonwebtoken';
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-        return res.status(401).json({ success: false, message: 'Access token required' });
+        // Create an error object to pass to the middleware's callback
+        const err = new Error('Access token required');
+        err.status = 401;
+        return next(err);
     }
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        console.error("JWT_SECRET is not set on the server.");
+        const err = new Error('Server configuration error: JWT secret is missing.');
+        err.status = 500;
+        return next(err);
+    }
+
+    jwt.verify(token, secret, (err, user) => {
         if (err) {
             console.error("JWT Verification Error:", err.message);
-            return res.status(403).json({ success: false, message: 'Invalid or expired token' });
+            const verificationError = new Error('Invalid or expired token');
+            verificationError.status = 403;
+            return next(verificationError);
         }
         req.user = user; // Add decoded user payload to request object
         next();
     });
 };
 
-module.exports = authenticateToken;
+export default authenticateToken;
+

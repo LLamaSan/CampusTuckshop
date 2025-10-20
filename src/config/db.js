@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // This caching logic is crucial for serverless environments.
 // It prevents creating a new database connection on every API call.
@@ -20,6 +20,7 @@ async function connectDB() {
     };
 
     console.log("Creating new MongoDB connection promise.");
+    // Make sure MONGODB_URI is set in your Vercel environment variables
     cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
       console.log("New MongoDB connection established.");
       return mongoose;
@@ -37,5 +38,4 @@ async function connectDB() {
   return cached.conn;
 }
 
-module.exports = connectDB;
-
+export default connectDB;
