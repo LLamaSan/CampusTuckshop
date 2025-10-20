@@ -2,7 +2,6 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import { sendOrderConfirmationEmail } from '../services/emailService.js';
-// 1. Import the new helper function
 import { generateOrderId } from '../utils/helpers.js';
 
 // --- Place a new order ---
@@ -10,13 +9,13 @@ export const placeOrder = async (req, res) => {
     try {
         const { items, address } = req.body;
 
-        // 2. Get all required user details from the authentication token
+        // Get all required user details from the authentication token
         if (!req.user || !req.user.id || !req.user.name || !req.user.email) {
             return res.status(401).json({ success: false, message: 'Authentication error: User details not found in token.' });
         }
         const { id: userId, name: userName, email: userEmail } = req.user;
 
-        // --- Your existing validation (this is great!) ---
+        // --- Your existing validation ---
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Order items are required' });
         }
@@ -47,13 +46,13 @@ export const placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Stock unavailable: ' + stockErrors.join('; ') });
         }
 
-        // 3. Create the order object with ALL required fields
+        // Create the order object with ALL required fields
         const orderId = generateOrderId(); // Generate the unique ID
         const newOrder = await Order.create({
-            orderId,      // <-- Field Added
-            userId,       // <-- Field Added
-            userEmail,    // <-- Field Added
-            userName,     // <-- Field Added
+            orderId,
+            userId,
+            userEmail,
+            userName,
             items: updatedOrderItems,
             total,
             address,
@@ -65,10 +64,18 @@ export const placeOrder = async (req, res) => {
             await Product.updateOne({ _id: item.productId }, { $inc: { quantity: -item.quantity } });
         }
         console.log(`✅ Order created: ${orderId}`);
+        
+        // --- TEMPORARY DEBUG LOGGING ---
+        console.log('--- PREPARING TO SEND ORDER EMAIL ---');
+        console.log(`Calling sendOrderConfirmationEmail with userId: ${userId}`);
+        console.log(`Is the newOrder object present? ${!!newOrder}`);
+        console.log('------------------------------------');
+        // --- END DEBUG ---
 
-        // --- Your existing Email logic ---
-        sendOrderConfirmationEmail(userId, newOrder)
-            .catch(err => console.error('📧 Email error (non-blocking):', err));
+        // --- Send Email (Now Blocking) ---
+        // By adding 'await', any error inside the email function will be caught
+        // by the main catch block below, making the error visible.
+        await sendOrderConfirmationEmail(userId, newOrder);
 
         res.status(201).json({
             success: true,
@@ -77,13 +84,13 @@ export const placeOrder = async (req, res) => {
         });
 
     } catch (error) {
+        // The real email error will now appear here
         console.error('❌ Order placement error:', error);
         res.status(500).json({ success: false, message: 'Server error during order placement' });
     }
 };
 
 // --- Get orders for the authenticated user ---
-// Renamed the function for consistency, but kept your logic.
 export const getAllOrders = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
