@@ -5,28 +5,28 @@ const authenticateToken = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-        // Create an error object to pass to the middleware's callback
         const err = new Error('Access token required');
         err.status = 401;
         return next(err);
     }
-
+    
     const secret = process.env.JWT_SECRET;
-    if (!secret) {
-        console.error("JWT_SECRET is not set on the server.");
-        const err = new Error('Server configuration error: JWT secret is missing.');
-        err.status = 500;
-        return next(err);
-    }
+
+    // --- TEMPORARY DEBUG LOGGING ---
+    console.log('--- TOKEN VERIFICATION (Order Placement) ---');
+    console.log(`JWT_SECRET found for VERIFYING: "${secret}"`);
+    console.log(`Secret length: ${secret ? secret.length : 'NOT SET'}`);
+    console.log('------------------------------------------');
+    // --- END DEBUG ---
 
     jwt.verify(token, secret, (err, user) => {
         if (err) {
-            console.error("JWT Verification Error:", err.message);
-            const verificationError = new Error('Invalid or expired token');
+            console.error('JWT Verification Error:', err.message);
+            const verificationError = new Error('Token is invalid or expired');
             verificationError.status = 403;
             return next(verificationError);
         }
-        req.user = user; // Add decoded user payload to request object
+        req.user = user;
         next();
     });
 };
