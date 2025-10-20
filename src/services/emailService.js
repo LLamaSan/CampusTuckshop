@@ -1,17 +1,16 @@
 // Use modern ES Module syntax
 import * as brevo from '@getbrevo/brevo';
-import User from '../models/User.js'; // Needed to get user's email and name
+import User from '../models/User.js';
 
 // --- Configuration ---
-// Make sure these are set in your Vercel Environment Variables
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_API_key = process.env.BREVO_API_KEY;
 const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL || 'no-reply@yourdomain.com';
 const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || 'Campus Tuckshop';
 
 let apiInstance;
-if (BREVO_API_KEY) {
+if (BREVO_API_key) {
     apiInstance = new brevo.TransactionalEmailsApi();
-    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
+    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_key);
 } else {
     console.error('⚠️ BREVO_API_KEY is not set. Emails will not be sent.');
 }
@@ -97,7 +96,15 @@ export const sendWelcomeEmail = async (user) => {
 
 // --- Order Confirmation Email ---
 export const sendOrderConfirmationEmail = async (userId, order) => {
-    if (!apiInstance) return;
+    if (!apiInstance) {
+        console.log("Email sending skipped: Brevo API key not configured.");
+        return;
+    }
+    
+    if (!userId) {
+        console.error("CRITICAL EMAIL ERROR: sendOrderConfirmationEmail was called without a userId.");
+        return; 
+    }
 
     try {
         const user = await User.findById(userId);
