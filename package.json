@@ -33,5 +33,5 @@
   "engines": {
   "node": "22.x"
 },
-  "type": "commonjs"
+  "type": "module"
 }
