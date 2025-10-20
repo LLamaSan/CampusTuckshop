@@ -4,11 +4,13 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { sendWelcomeEmail } from '../services/emailService.js';
 
-// --- Sign Up a New User (Your logic, updated syntax) ---
+// --- Sign Up a New User ---
 export const signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        // ... (your validation logic can go here) ...
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
+        }
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ success: false, message: "User with this email already exists." });
@@ -17,7 +19,6 @@ export const signup = async (req, res) => {
         const user = new User({ name, email, password: hashedPassword });
         await user.save();
         
-        // Send welcome email (non-blocking)
         sendWelcomeEmail(user)
             .catch(emailError => console.error('Welcome email failed (non-blocking):', emailError));
             
@@ -28,11 +29,10 @@ export const signup = async (req, res) => {
     }
 };
 
-// --- Login User and Create Token (Your logic with debug logging) ---
+// --- Login User and Create Token ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        // ... (validation) ...
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({ success: false, message: "Invalid credentials" });
@@ -43,21 +43,13 @@ export const login = async (req, res) => {
         }
         
         const payload = {
-            id: user._id, // Correct key is 'id'
+            id: user._id,
             name: user.name,
             email: user.email,
             role: user.role
         };
         
         const secret = process.env.JWT_SECRET;
-
-        // --- TEMPORARY DEBUG LOGGING ---
-        console.log('--- TOKEN SIGNING (Login) ---');
-        console.log(`JWT_SECRET found for SIGNING: "${secret}"`);
-        console.log(`Secret length: ${secret ? secret.length : 'NOT SET'}`);
-        console.log('-----------------------------');
-        // --- END DEBUG ---
-
         const token = jwt.sign(payload, secret, { expiresIn: '24h' });
 
         res.json({
@@ -71,12 +63,8 @@ export const login = async (req, res) => {
     }
 };
 
-// --- Verify a Token's Validity (Your logic, updated syntax) ---
+// --- Verify a Token's Validity ---
 export const verifyToken = (req, res) => {
-    // The authenticateToken middleware already attached user data to req.user
-    res.json({
-        success: true,
-        user: req.user // The middleware provides the full user payload
-    });
+    res.json({ success: true, user: req.user });
 };
 

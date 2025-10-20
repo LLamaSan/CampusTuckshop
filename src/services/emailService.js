@@ -1,16 +1,17 @@
 // Use modern ES Module syntax
 import * as brevo from '@getbrevo/brevo';
 import User from '../models/User.js';
+import Product from '../models/Product.js'; // Import Product model to get image URLs
 
 // --- Configuration ---
-const BREVO_API_key = process.env.BREVO_API_KEY;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL || 'no-reply@yourdomain.com';
 const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || 'Campus Tuckshop';
 
 let apiInstance;
-if (BREVO_API_key) {
+if (BREVO_API_KEY) {
     apiInstance = new brevo.TransactionalEmailsApi();
-    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_key);
+    apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
 } else {
     console.error('⚠️ BREVO_API_KEY is not set. Emails will not be sent.');
 }
@@ -20,56 +21,93 @@ const sender = {
     name: BREVO_FROM_NAME
 };
 
-// --- Main Template Function ---
-// A helper function to wrap all emails in a consistent, decorative template.
+// --- Main Decorative Template Function ---
 const createHtmlTemplate = (title, content) => `
-<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
-    <div style="background-color: #4facfe; color: white; padding: 20px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px;">${BREVO_FROM_NAME}</h1>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+</style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #1a1a2e; font-family: 'Roboto', Arial, sans-serif;">
+  <div style="max-width: 600px; margin: 20px auto; border: 1px solid #2c2c54; border-radius: 10px; overflow: hidden; background-color: #16213e; color: #e0e0e0;">
+    <div style="background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%); color: white; padding: 25px; text-align: center;">
+        <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">${BREVO_FROM_NAME}</h1>
     </div>
     <div style="padding: 30px;">
-        <h2 style="color: #007bff; font-size: 20px;">${title}</h2>
+        <h2 style="color: #4facfe; font-size: 22px; border-bottom: 2px solid #4facfe; padding-bottom: 10px;">${title}</h2>
         ${content}
         <p style="margin-top: 30px;">Thanks,</p>
         <p style="margin: 0;">The Campus Tuckshop Team</p>
     </div>
-    <div style="background-color: #f8f9fa; text-align: center; padding: 15px; font-size: 12px; color: #6c757d;">
+    <div style="background-color: #0f172a; text-align: center; padding: 15px; font-size: 12px; color: #a0a0a0;">
         <p style="margin: 0;">&copy; ${new Date().getFullYear()} Campus Tuckshop. All rights reserved.</p>
     </div>
-</div>
+  </div>
+</body>
+</html>
 `;
 
-// --- Password Reset Email ---
-export const sendPasswordResetEmail = async (user, resetToken) => {
+// --- Order Confirmation Email ---
+export const sendOrderConfirmationEmail = async (userId, order) => {
     if (!apiInstance) return;
 
-    const resetLink = `https://campus-tuckshop.vercel.app/reset-password.html?token=${resetToken}`;
-    const subject = 'Reset Your Password';
-    const content = `
-        <p>Hi ${user.name},</p>
-        <p>We received a request to reset your password. Click the button below to set a new one. This link is valid for one hour.</p>
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" style="background-color: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Your Password</a>
-        </div>
-        <p>If you didn't request a password reset, you can safely ignore this email.</p>
-    `;
-    const htmlContent = createHtmlTemplate(subject, content);
-    
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    sendSmtpEmail.sender = sender;
-    sendSmtpEmail.to = [{ email: user.email }];
-    sendSmtpEmail.subject = `${subject} - ${BREVO_FROM_NAME}`;
-    sendSmtpEmail.htmlContent = htmlContent;
-
     try {
+        const user = await User.findById(userId);
+        if (!user) {
+            console.error(`Could not find user with ID ${userId} to send order confirmation.`);
+            return;
+        }
+
+        // Fetch product details to get image URLs
+        const detailedItems = await Promise.all(order.items.map(async (item) => {
+            const product = await Product.findById(item.productId);
+            return {
+                ...item.toObject(),
+                imageUrl: product ? product.imageUrl : 'https://placehold.co/60x60/404080/e0e0e0?text=N/A' // Fallback image
+            };
+        }));
+
+        const subject = `Your Order is Confirmed!`;
+        const itemsHtml = detailedItems.map(item => 
+            `<div style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2c2c54;">
+                <img src="${item.imageUrl}" alt="${item.name}" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover;">
+                <div style="flex-grow: 1;">
+                    <span style="font-weight: bold; color: #ffffff;">${item.name}</span>
+                    <span style="color: #a0a0a0;">(x${item.quantity})</span>
+                </div>
+                <div style="font-weight: bold; color: #4facfe;">₹${(item.price * item.quantity).toFixed(2)}</div>
+            </div>`
+        ).join('');
+        
+        const content = `
+            <p style="font-size: 16px;">Thank you for your order! We've received it and will have it ready for you shortly.</p>
+            <h3 style="color: #ffffff; border-bottom: 1px solid #4facfe; padding-bottom: 5px; margin-top: 25px; font-size: 18px;">Order Summary (#${order.orderId})</h3>
+            <div style="margin-top: 15px;">
+                ${itemsHtml}
+            </div>
+            <div style="text-align: right; font-size: 1.4em; font-weight: bold; margin-top: 20px; padding-top: 15px; border-top: 2px solid #4facfe; color: #4facfe;">
+                Total: ₹${order.total.toFixed(2)}
+            </div>
+        `;
+        const htmlContent = createHtmlTemplate(subject, content);
+
+        const sendSmtpEmail = new brevo.SendSmtpEmail();
+        sendSmtpEmail.sender = sender;
+        sendSmtpEmail.to = [{ email: user.email }];
+        sendSmtpEmail.subject = `Order Confirmation #${order.orderId}`;
+        sendSmtpEmail.htmlContent = htmlContent;
+
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Password reset email sent to ${user.email}`);
+        console.log(`Order confirmation email sent to ${user.email}`);
     } catch (error) {
-        console.error(`Brevo email error (Password Reset):`, error.response ? JSON.stringify(error.response.body) : error.message);
+        console.error(`Brevo email error (Order Confirmation):`, error.response ? JSON.stringify(error.response.body) : error.message);
     }
 };
 
-// --- Welcome Email ---
+
+// --- Welcome Email (Also uses new template) ---
 export const sendWelcomeEmail = async (user) => {
     if (!apiInstance) return;
     
@@ -94,60 +132,34 @@ export const sendWelcomeEmail = async (user) => {
     }
 };
 
-// --- Order Confirmation Email ---
-export const sendOrderConfirmationEmail = async (userId, order) => {
-    if (!apiInstance) {
-        console.log("Email sending skipped: Brevo API key not configured.");
-        return;
-    }
+
+// --- Password Reset Email (Also uses new template) ---
+export const sendPasswordResetEmail = async (user, resetToken) => {
+    if (!apiInstance) return;
+
+    const resetLink = `https://campus-tuckshop.vercel.app/reset-password.html?token=${resetToken}`;
+    const subject = 'Reset Your Password';
+    const content = `
+        <p>Hi ${user.name},</p>
+        <p>We received a request to reset your password. Click the button below to set a new one. This link is valid for one hour.</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%); color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Your Password</a>
+        </div>
+        <p>If you didn't request a password reset, you can safely ignore this email.</p>
+    `;
+    const htmlContent = createHtmlTemplate(subject, content);
     
-    if (!userId) {
-        console.error("CRITICAL EMAIL ERROR: sendOrderConfirmationEmail was called without a userId.");
-        return; 
-    }
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = sender;
+    sendSmtpEmail.to = [{ email: user.email }];
+    sendSmtpEmail.subject = `${subject} - ${BREVO_FROM_NAME}`;
+    sendSmtpEmail.htmlContent = htmlContent;
 
     try {
-        const user = await User.findById(userId);
-        if (!user) {
-            console.error(`Could not find user with ID ${userId} to send order confirmation.`);
-            return;
-        }
-
-        const subject = `Your Order is Confirmed!`;
-        const itemsHtml = order.items.map(item => 
-            `<tr>
-                <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${item.name} (x${item.quantity})</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; text-align: right;">₹${(item.price * item.quantity).toFixed(2)}</td>
-            </tr>`
-        ).join('');
-        
-        const content = `
-            <p>Thank you for your order! We've received it and will have it ready for you shortly.</p>
-            <h3 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 25px;">Order Summary (#${order.orderId})</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                <tbody>
-                    ${itemsHtml}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td style="padding: 15px 10px 0; text-align: right; font-weight: bold;">Total:</td>
-                        <td style="padding: 15px 10px 0; text-align: right; font-weight: bold; font-size: 1.2em; color: #007bff;">₹${order.total.toFixed(2)}</td>
-                    </tr>
-                </tfoot>
-            </table>
-        `;
-        const htmlContent = createHtmlTemplate(subject, content);
-
-        const sendSmtpEmail = new brevo.SendSmtpEmail();
-        sendSmtpEmail.sender = sender;
-        sendSmtpEmail.to = [{ email: user.email }];
-        sendSmtpEmail.subject = `Order Confirmation #${order.orderId}`;
-        sendSmtpEmail.htmlContent = htmlContent;
-
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Order confirmation email sent to ${user.email}`);
+        console.log(`Password reset email sent to ${user.email}`);
     } catch (error) {
-        console.error(`Brevo email error (Order Confirmation):`, error.response ? JSON.stringify(error.response.body) : error.message);
+        console.error(`Brevo email error (Password Reset):`, error.response ? JSON.stringify(error.response.body) : error.message);
     }
 };
 

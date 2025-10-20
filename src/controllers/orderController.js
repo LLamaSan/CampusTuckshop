@@ -65,17 +65,10 @@ export const placeOrder = async (req, res) => {
         }
         console.log(`✅ Order created: ${orderId}`);
         
-        // --- TEMPORARY DEBUG LOGGING ---
-        console.log('--- PREPARING TO SEND ORDER EMAIL ---');
-        console.log(`Calling sendOrderConfirmationEmail with userId: ${userId}`);
-        console.log(`Is the newOrder object present? ${!!newOrder}`);
-        console.log('------------------------------------');
-        // --- END DEBUG ---
-
-        // --- Send Email (Now Blocking) ---
-        // By adding 'await', any error inside the email function will be caught
-        // by the main catch block below, making the error visible.
-        await sendOrderConfirmationEmail(userId, newOrder);
+        // --- Send Email (Non-Blocking for a fast response) ---
+        // The 'await' is removed, and the debug logs are gone.
+        sendOrderConfirmationEmail(userId, newOrder)
+            .catch(err => console.error('📧 Email error (non-blocking):', err));
 
         res.status(201).json({
             success: true,
@@ -84,7 +77,6 @@ export const placeOrder = async (req, res) => {
         });
 
     } catch (error) {
-        // The real email error will now appear here
         console.error('❌ Order placement error:', error);
         res.status(500).json({ success: false, message: 'Server error during order placement' });
     }
