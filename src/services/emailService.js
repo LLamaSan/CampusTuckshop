@@ -53,18 +53,18 @@ export const sendOrderConfirmationEmail = async (userId, order) => {
     if (!apiInstance) return;
 
     try {
-        const user = await User.findById(userId);
-        if (!user) {
-            console.error(`Could not find user with ID ${userId} to send order confirmation.`);
-            return;
-        }
+         const baseUrl = 'https://campus-tuckshop.vercel.app';
 
-        // Fetch product details to get image URLs (your existing logic is perfect)
+        // Fetch product details to get image URLs and prepend the base URL
         const detailedItems = await Promise.all(order.items.map(async (item) => {
             const product = await Product.findById(item.productId);
+            // Construct the full, absolute URL for the image
+            const absoluteImageUrl = product && product.imageUrl 
+                ? `${baseUrl}${product.imageUrl}` 
+                : 'https://placehold.co/60x60/16213e/e0e0e0?text=N/A';
             return {
                 ...item.toObject(),
-                imageUrl: product ? product.imageUrl : 'https://placehold.co/60x60/16213e/e0e0e0?text=N/A' // Fallback image
+                imageUrl: absoluteImageUrl
             };
         }));
 
